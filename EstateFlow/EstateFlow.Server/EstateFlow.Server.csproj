@@ -1,4 +1,4 @@
-
+﻿
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
@@ -8,6 +8,7 @@
     <SpaRoot>..\estateflow.client</SpaRoot>
     <SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
     <SpaProxyServerUrl>https://localhost:64218</SpaProxyServerUrl>
+    <UserSecretsId>cf4ac2e6-d8f2-4d92-af41-e9c213302bf9</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
