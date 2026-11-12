@@ -1,4 +1,4 @@
-﻿using EstateFlow.Infrastructure.Data;
+﻿using EstateFlow.Application;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,13 +6,15 @@ namespace EstateFlow.Server.Contracts.Properties
 {
     public class CreatePropertyRequestValidator : AbstractValidator<CreatePropertyRequest>
     {
-        public CreatePropertyRequestValidator(EstateFlowDbContext context)
+        public CreatePropertyRequestValidator(IApplicationDbContext context)
         {
             RuleFor(x => x.Code)
                 .NotEmpty()
                 .MaximumLength(10)
                 .MustAsync(async (code, cancellationToken) =>
-                    !await context.Properties.AnyAsync(p => p.Code == code, cancellationToken))
+                    !await context.Properties.AnyAsync(
+                        p => p.Code == code,
+                        cancellationToken))
                 .WithMessage("A property with code '{PropertyValue}' already exists.");
 
             RuleFor(x => x.Name)
@@ -29,7 +31,9 @@ namespace EstateFlow.Server.Contracts.Properties
 
             RuleFor(x => x.CityId)
                 .MustAsync(async (cityId, cancellationToken) =>
-                    await context.Cities.AnyAsync(c => c.Id == cityId, cancellationToken))
+                    await context.Cities.AnyAsync(
+                        c => c.Id == cityId,
+                        cancellationToken))
                 .WithMessage("City with id {PropertyValue} does not exist.");
         }
     }

@@ -1,5 +1,5 @@
-﻿using EstateFlow.Server.Contracts.Meters;
-using EstateFlow.Infrastructure.Data;
+﻿using EstateFlow.Application;
+using EstateFlow.Server.Contracts.Meters;
 using EstateFlow.Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,16 +7,19 @@ namespace EstateFlow.Server.Services
 {
     public class MeterReadingService : IMeterReadingService
     {
-        private readonly EstateFlowDbContext _context;
+        private readonly IApplicationDbContext _context;
 
-        public MeterReadingService(EstateFlowDbContext context)
+        public MeterReadingService(IApplicationDbContext context)
         {
             _context = context;
         }
 
-        public async Task<MeterReadingSubmissionResult> SubmitReadingAsync(Guid meterId, SubmitMeterReadingRequest request)
+        public async Task<MeterReadingSubmissionResult> SubmitReadingAsync(
+            Guid meterId,
+            SubmitMeterReadingRequest request)
         {
-            var meterExists = await _context.Meters.AnyAsync(m => m.Id == meterId);
+            var meterExists = await _context.Meters
+                .AnyAsync(m => m.Id == meterId);
 
             if (!meterExists)
             {
@@ -25,32 +28,38 @@ namespace EstateFlow.Server.Services
 
             var measuredAt = request.MeasuredAt.Kind == DateTimeKind.Utc
                 ? request.MeasuredAt
-                : DateTime.SpecifyKind(request.MeasuredAt, DateTimeKind.Utc);
+                : DateTime.SpecifyKind(
+                    request.MeasuredAt,
+                    DateTimeKind.Utc);
 
-            // rule 1
+            // Rule 1: Reading value cannot decrease
             var latestReading = await _context.MeterReadings
                 .Where(r => r.MeterId == meterId)
                 .OrderByDescending(r => r.MeasuredAt)
                 .FirstOrDefaultAsync();
 
-            if (latestReading is not null && request.Value < latestReading.Value)
+            if (latestReading is not null &&
+                request.Value < latestReading.Value)
             {
-                return MeterReadingSubmissionResult.Failure(FormattableString.Invariant(
-                    $"The submitted value ({request.Value}) is lower than the latest reading ({latestReading.Value})."));
+                return MeterReadingSubmissionResult.Failure(
+                    FormattableString.Invariant(
+                        $"The submitted value ({request.Value}) is lower than the latest reading ({latestReading.Value})."));
             }
 
-            // rule 2
-            if (latestReading is not null && measuredAt <= latestReading.MeasuredAt)
+            // Rule 2: Measurement date must be later
+            if (latestReading is not null &&
+                measuredAt <= latestReading.MeasuredAt)
             {
                 return MeterReadingSubmissionResult.Failure(
                     $"The measurement date ({measuredAt:yyyy-MM-dd}) must be later than the date of the latest reading ({latestReading.MeasuredAt:yyyy-MM-dd}).");
             }
 
-            // rule 3
-            var alreadyReportedThisMonth = await _context.MeterReadings.AnyAsync(r =>
-                r.MeterId == meterId
-                && r.MeasuredAt.Year == measuredAt.Year
-                && r.MeasuredAt.Month == measuredAt.Month);
+            // Rule 3: Only one reading per month
+            var alreadyReportedThisMonth = await _context.MeterReadings
+                .AnyAsync(r =>
+                    r.MeterId == meterId &&
+                    r.MeasuredAt.Year == measuredAt.Year &&
+                    r.MeasuredAt.Month == measuredAt.Month);
 
             if (alreadyReportedThisMonth)
             {

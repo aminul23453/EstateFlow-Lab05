@@ -1,5 +1,6 @@
-﻿using EstateFlow.Server.Contracts.Expenses;
-using EstateFlow.Infrastructure.Data;
+﻿
+using EstateFlow.Application;
+using EstateFlow.Server.Contracts.Expenses;
 using EstateFlow.Domain;
 using FluentValidation;
 using Mapster;
@@ -12,11 +13,12 @@ namespace EstateFlow.Server.Controllers
     [ApiController]
     public class ExpensesController : ControllerBase
     {
-        private readonly EstateFlowDbContext _context;
+        private readonly IApplicationDbContext _context;
         private readonly IValidator<CreateExpenseRequest> _createValidator;
         private readonly IValidator<UpdateExpenseRequest> _updateValidator;
 
-        public ExpensesController(EstateFlowDbContext context, 
+        public ExpensesController(
+            IApplicationDbContext context,
             IValidator<CreateExpenseRequest> createValidator,
             IValidator<UpdateExpenseRequest> updateValidator)
         {
@@ -55,7 +57,8 @@ namespace EstateFlow.Server.Controllers
 
         // POST: api/expenses
         [HttpPost]
-        public async Task<ActionResult<ExpenseResponse>> CreateExpense(CreateExpenseRequest request)
+        public async Task<ActionResult<ExpenseResponse>> CreateExpense(
+            CreateExpenseRequest request)
         {
             var validationResult = await _createValidator.ValidateAsync(request);
 
@@ -63,7 +66,9 @@ namespace EstateFlow.Server.Controllers
             {
                 foreach (var error in validationResult.Errors)
                 {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                    ModelState.AddModelError(
+                        error.PropertyName,
+                        error.ErrorMessage);
                 }
 
                 return ValidationProblem(ModelState);
@@ -74,7 +79,9 @@ namespace EstateFlow.Server.Controllers
                 Id = Guid.NewGuid(),
                 PaidAt = request.PaidAt.Kind == DateTimeKind.Utc
                     ? request.PaidAt
-                    : DateTime.SpecifyKind(request.PaidAt, DateTimeKind.Utc),
+                    : DateTime.SpecifyKind(
+                        request.PaidAt,
+                        DateTimeKind.Utc),
                 Amount = request.Amount,
                 Type = request.Type,
                 Name = request.Name,
@@ -90,12 +97,17 @@ namespace EstateFlow.Server.Controllers
                 .ProjectToType<ExpenseResponse>()
                 .SingleAsync();
 
-            return CreatedAtAction(nameof(GetExpense), new { id = expense.Id }, response);
+            return CreatedAtAction(
+                nameof(GetExpense),
+                new { id = expense.Id },
+                response);
         }
 
         // PUT: api/expenses/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateExpense(Guid id, UpdateExpenseRequest request)
+        public async Task<IActionResult> UpdateExpense(
+            Guid id,
+            UpdateExpenseRequest request)
         {
             var validationResult = await _updateValidator.ValidateAsync(request);
 
@@ -103,7 +115,9 @@ namespace EstateFlow.Server.Controllers
             {
                 foreach (var error in validationResult.Errors)
                 {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                    ModelState.AddModelError(
+                        error.PropertyName,
+                        error.ErrorMessage);
                 }
 
                 return ValidationProblem(ModelState);
@@ -118,7 +132,10 @@ namespace EstateFlow.Server.Controllers
 
             expense.PaidAt = request.PaidAt.Kind == DateTimeKind.Utc
                 ? request.PaidAt
-                : DateTime.SpecifyKind(request.PaidAt, DateTimeKind.Utc);
+                : DateTime.SpecifyKind(
+                    request.PaidAt,
+                    DateTimeKind.Utc);
+
             expense.Amount = request.Amount;
             expense.Type = request.Type;
             expense.Name = request.Name;

@@ -1,6 +1,6 @@
-﻿using EstateFlow.Server.Contracts.Meters;
+﻿using EstateFlow.Application;
+using EstateFlow.Server.Contracts.Meters;
 using EstateFlow.Server.Contracts.Properties;
-using EstateFlow.Infrastructure.Data;
 using EstateFlow.Domain;
 using FluentValidation;
 using Mapster;
@@ -13,12 +13,13 @@ namespace EstateFlow.Server.Controllers
     [ApiController]
     public class PropertiesController : ControllerBase
     {
-        private readonly EstateFlowDbContext _context;
+        private readonly IApplicationDbContext _context;
         private readonly IValidator<CreatePropertyRequest> _createValidator;
         private readonly IValidator<UpdatePropertyRequest> _updateValidator;
 
-        public PropertiesController(EstateFlowDbContext context, 
-            IValidator<CreatePropertyRequest> createValidator, 
+        public PropertiesController(
+            IApplicationDbContext context,
+            IValidator<CreatePropertyRequest> createValidator,
             IValidator<UpdatePropertyRequest> updateValidator)
         {
             _context = context;
@@ -33,6 +34,7 @@ namespace EstateFlow.Server.Controllers
             var properties = await _context.Properties
                 .ProjectToType<PropertyResponse>()
                 .ToListAsync();
+
             return Ok(properties);
         }
 
@@ -57,7 +59,8 @@ namespace EstateFlow.Server.Controllers
         [HttpGet("{id}/meters")]
         public async Task<ActionResult<IEnumerable<MeterResponse>>> GetPropertyMeters(Guid id)
         {
-            var propertyExists = await _context.Properties.AnyAsync(p => p.Id == id);
+            var propertyExists = await _context.Properties
+                .AnyAsync(p => p.Id == id);
 
             if (!propertyExists)
             {
@@ -74,7 +77,8 @@ namespace EstateFlow.Server.Controllers
 
         // POST: api/properties
         [HttpPost]
-        public async Task<ActionResult<PropertyResponse>> CreateProperty(CreatePropertyRequest request)
+        public async Task<ActionResult<PropertyResponse>> CreateProperty(
+            CreatePropertyRequest request)
         {
             var validationResult = await _createValidator.ValidateAsync(request);
 
@@ -82,7 +86,9 @@ namespace EstateFlow.Server.Controllers
             {
                 foreach (var error in validationResult.Errors)
                 {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                    ModelState.AddModelError(
+                        error.PropertyName,
+                        error.ErrorMessage);
                 }
 
                 return ValidationProblem(ModelState);
@@ -107,12 +113,17 @@ namespace EstateFlow.Server.Controllers
                 .ProjectToType<PropertyResponse>()
                 .SingleAsync();
 
-            return CreatedAtAction(nameof(GetProperty), new { id = property.Id }, response);
+            return CreatedAtAction(
+                nameof(GetProperty),
+                new { id = property.Id },
+                response);
         }
 
         // PUT: api/properties/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProperty(Guid id, UpdatePropertyRequest request)
+        public async Task<IActionResult> UpdateProperty(
+            Guid id,
+            UpdatePropertyRequest request)
         {
             var validationResult = await _updateValidator.ValidateAsync(request);
 
@@ -120,7 +131,9 @@ namespace EstateFlow.Server.Controllers
             {
                 foreach (var error in validationResult.Errors)
                 {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                    ModelState.AddModelError(
+                        error.PropertyName,
+                        error.ErrorMessage);
                 }
 
                 return ValidationProblem(ModelState);

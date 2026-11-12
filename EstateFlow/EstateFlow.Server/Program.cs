@@ -1,3 +1,4 @@
+using EstateFlow.Application;
 using EstateFlow.Infrastructure.Data;
 using EstateFlow.Server.Services;
 using FluentValidation;
@@ -7,20 +8,27 @@ using Microsoft.OpenApi;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
+// Configure OpenAPI
 builder.Services.AddOpenApi(options =>
 {
     options.OpenApiVersion = OpenApiSpecVersion.OpenApi3_0;
 });
 
-
+// Configure PostgreSQL database
 builder.Services.AddDbContext<EstateFlowDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("EstateFlowDbConnection")));
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("EstateFlowDbConnection")));
 
+// Register IApplicationDbContext
+builder.Services.AddScoped<IApplicationDbContext>(
+    provider => provider.GetRequiredService<EstateFlowDbContext>());
+
+// Register validators
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
+// Register services
 builder.Services.AddScoped<IMeterReadingService, MeterReadingService>();
 
 var app = builder.Build();
@@ -28,10 +36,11 @@ var app = builder.Build();
 app.UseDefaultFiles();
 app.MapStaticAssets();
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/openapi/v1.json", "EstateFlow API v1");

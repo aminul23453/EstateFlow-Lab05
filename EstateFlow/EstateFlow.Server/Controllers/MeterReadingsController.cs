@@ -1,4 +1,5 @@
-﻿using EstateFlow.Infrastructure.Data;
+﻿
+using EstateFlow.Application;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EstateFlow.Server.Controllers
@@ -10,10 +11,12 @@ namespace EstateFlow.Server.Controllers
         private const long MaxFileSizeBytes = 5 * 1024 * 1024;
         private static readonly string[] AllowedExtensions = [".jpg", ".jpeg", ".png"];
 
-        private readonly EstateFlowDbContext _context;
+        private readonly IApplicationDbContext _context;
         private readonly IWebHostEnvironment _environment;
 
-        public MeterReadingsController(EstateFlowDbContext context, IWebHostEnvironment environment)
+        public MeterReadingsController(
+            IApplicationDbContext context,
+            IWebHostEnvironment environment)
         {
             _context = context;
             _environment = environment;
@@ -32,12 +35,15 @@ namespace EstateFlow.Server.Controllers
 
             if (photo is null || photo.Length == 0)
             {
-                return Problem("No file was uploaded.", statusCode: StatusCodes.Status400BadRequest);
+                return Problem(
+                    "No file was uploaded.",
+                    statusCode: StatusCodes.Status400BadRequest);
             }
 
             if (photo.Length > MaxFileSizeBytes)
             {
-                return Problem("The file exceeds the maximum allowed size of 5 MB.",
+                return Problem(
+                    "The file exceeds the maximum allowed size of 5 MB.",
                     statusCode: StatusCodes.Status400BadRequest);
             }
 
@@ -45,11 +51,16 @@ namespace EstateFlow.Server.Controllers
 
             if (!AllowedExtensions.Contains(extension))
             {
-                return Problem($"File type '{extension}' is not allowed. Allowed types: .jpg, .jpeg, .png.",
+                return Problem(
+                    $"File type '{extension}' is not allowed. Allowed types: .jpg, .jpeg, .png.",
                     statusCode: StatusCodes.Status400BadRequest);
             }
 
-            var uploadsDirectory = Path.Combine(_environment.ContentRootPath, "uploads", "meter-readings");
+            var uploadsDirectory = Path.Combine(
+                _environment.ContentRootPath,
+                "uploads",
+                "meter-readings");
+
             Directory.CreateDirectory(uploadsDirectory);
 
             var fileName = $"{reading.Id}{extension}";

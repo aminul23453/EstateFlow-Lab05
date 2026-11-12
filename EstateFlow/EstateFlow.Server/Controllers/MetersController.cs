@@ -1,5 +1,5 @@
-﻿using EstateFlow.Server.Contracts.Meters;
-using EstateFlow.Infrastructure.Data;
+﻿using EstateFlow.Application;
+using EstateFlow.Server.Contracts.Meters;
 using EstateFlow.Domain;
 using EstateFlow.Server.Services;
 using FluentValidation;
@@ -13,12 +13,13 @@ namespace EstateFlow.Server.Controllers
     [ApiController]
     public class MetersController : ControllerBase
     {
-        private readonly EstateFlowDbContext _context;
+        private readonly IApplicationDbContext _context;
         private readonly IMeterReadingService _meterReadingService;
         private readonly IValidator<SubmitMeterReadingRequest> _submitValidator;
 
-        public MetersController(EstateFlowDbContext context, 
-            IMeterReadingService meterReadingService, 
+        public MetersController(
+            IApplicationDbContext context,
+            IMeterReadingService meterReadingService,
             IValidator<SubmitMeterReadingRequest> submitValidator)
         {
             _context = context;
@@ -59,7 +60,8 @@ namespace EstateFlow.Server.Controllers
         [HttpGet("{id}/readings")]
         public async Task<ActionResult<IEnumerable<MeterReading>>> GetMeterReadings(Guid id)
         {
-            var meterExists = await _context.Meters.AnyAsync(m => m.Id == id);
+            var meterExists = await _context.Meters
+                .AnyAsync(m => m.Id == id);
 
             if (!meterExists)
             {
@@ -76,7 +78,9 @@ namespace EstateFlow.Server.Controllers
 
         // POST: api/meters/{id}/readings
         [HttpPost("{id}/readings")]
-        public async Task<ActionResult<MeterReadingResponse>> SubmitReading(Guid id, SubmitMeterReadingRequest request)
+        public async Task<ActionResult<MeterReadingResponse>> SubmitReading(
+            Guid id,
+            SubmitMeterReadingRequest request)
         {
             var validationResult = await _submitValidator.ValidateAsync(request);
 
@@ -84,7 +88,9 @@ namespace EstateFlow.Server.Controllers
             {
                 foreach (var error in validationResult.Errors)
                 {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                    ModelState.AddModelError(
+                        error.PropertyName,
+                        error.ErrorMessage);
                 }
 
                 return ValidationProblem(ModelState);
@@ -99,12 +105,17 @@ namespace EstateFlow.Server.Controllers
 
             if (result.Error is not null)
             {
-                return Problem(result.Error, statusCode: StatusCodes.Status400BadRequest);
+                return Problem(
+                    result.Error,
+                    statusCode: StatusCodes.Status400BadRequest);
             }
 
             var response = result.Reading!.Adapt<MeterReadingResponse>();
 
-            return CreatedAtAction(nameof(GetMeterReadings), new { id }, response);
+            return CreatedAtAction(
+                nameof(GetMeterReadings),
+                new { id },
+                response);
         }
     }
 }

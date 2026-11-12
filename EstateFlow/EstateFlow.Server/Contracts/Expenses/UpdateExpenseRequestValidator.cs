@@ -1,4 +1,5 @@
-﻿using EstateFlow.Infrastructure.Data;
+﻿
+using EstateFlow.Application;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,7 +7,7 @@ namespace EstateFlow.Server.Contracts.Expenses
 {
     public class UpdateExpenseRequestValidator : AbstractValidator<UpdateExpenseRequest>
     {
-        public UpdateExpenseRequestValidator(EstateFlowDbContext context)
+        public UpdateExpenseRequestValidator(IApplicationDbContext context)
         {
             RuleFor(x => x.Amount)
                 .GreaterThan(0);
@@ -21,7 +22,9 @@ namespace EstateFlow.Server.Contracts.Expenses
 
             RuleFor(x => x.PropertyId)
                 .MustAsync(async (propertyId, cancellationToken) =>
-                    await context.Properties.AnyAsync(p => p.Id == propertyId, cancellationToken))
+                    await context.Properties.AnyAsync(
+                        p => p.Id == propertyId,
+                        cancellationToken))
                 .WithMessage("Property with id {PropertyValue} does not exist.");
         }
     }
