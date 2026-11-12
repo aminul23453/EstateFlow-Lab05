@@ -1,13 +1,15 @@
+
 using EstateFlow.Application;
+using EstateFlow.Application.Contracts.Properties;
+using EstateFlow.Application.Services;
 using EstateFlow.Infrastructure.Data;
-using EstateFlow.Server.Services;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Add services to the container
 builder.Services.AddControllers();
 
 // Configure OpenAPI
@@ -25,8 +27,8 @@ builder.Services.AddDbContext<EstateFlowDbContext>(options =>
 builder.Services.AddScoped<IApplicationDbContext>(
     provider => provider.GetRequiredService<EstateFlowDbContext>());
 
-// Register validators
-builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+// Register validators from the Application project
+builder.Services.AddValidatorsFromAssemblyContaining<CreatePropertyRequestValidator>();
 
 // Register services
 builder.Services.AddScoped<IMeterReadingService, MeterReadingService>();
@@ -36,7 +38,7 @@ var app = builder.Build();
 app.UseDefaultFiles();
 app.MapStaticAssets();
 
-// Configure the HTTP request pipeline
+// Configure HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();

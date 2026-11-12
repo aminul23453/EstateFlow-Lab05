@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using EstateFlow.Infrastructure.Data;
 using EstateFlow.Domain;
 
-namespace EstateFlow.Server.Controllers
+namespace EstateFlow.Application.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

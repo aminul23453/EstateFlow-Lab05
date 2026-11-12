@@ -2,7 +2,7 @@
 using EstateFlow.Application;
 using Microsoft.AspNetCore.Mvc;
 
-namespace EstateFlow.Server.Controllers
+namespace EstateFlow.Application.Controllers
 {
     [Route("api/meter-readings")]
     [ApiController]

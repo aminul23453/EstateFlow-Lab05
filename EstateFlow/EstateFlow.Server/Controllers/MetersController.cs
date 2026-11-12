@@ -1,13 +1,13 @@
 ﻿using EstateFlow.Application;
-using EstateFlow.Server.Contracts.Meters;
+using EstateFlow.Application.Contracts.Meters;
 using EstateFlow.Domain;
-using EstateFlow.Server.Services;
+using EstateFlow.Application.Services;
 using FluentValidation;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace EstateFlow.Server.Controllers
+namespace EstateFlow.Application.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
